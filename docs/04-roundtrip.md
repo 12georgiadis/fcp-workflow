@@ -139,11 +139,21 @@ BRAW enters FCP via BRAW Toolbox decoded to Rec.709 by default, or in BMD Film G
 **Rule**: if you're sending to Resolve for grading, import BRAW as BMD Film Gen 5 (log). Don't bake Rec.709 before grading — you lose latitude.
 
 ### What happens to color in FCP → Resolve
-- Camera LUTs applied in FCP (via LUT Robot or manual): **survive** in Resolve as a baked conversion on the clip
-- FCP color corrections (Color Board, Color Curves): **do not survive** — Resolve ignores them
-- FCP Enhance Light and Color (ML): **does not survive**
+
+| Element | What happens |
+|---------|-------------|
+| FCP Color Board / Color Curves | ❌ Ignored by Resolve |
+| FCP Enhance Light and Color (ML) | ❌ Ignored |
+| Camera LUT applied in FCP | ⚠️ Baked into clip, non-editable |
+| **BRAW source parameters (ISO, exposure, color temp)** | ✅ **Survive** — read directly from the .braw file by Resolve, not transmitted via FCPXML |
+| Color Finale grades | ❌ FCP-only, incompatible with Resolve |
+
+**Key distinction**: BRAW parameters survive because Resolve reads them from the source file directly — not because FCP transmitted them. The FCPXML is not involved. This means: if you leave your BRAW clips at their native parameters in FCP (no additional correction), Resolve will see the same starting point.
 
 **Best practice**: apply no color correction in FCP during assembly. Leave BRAW raw. All grading happens in Resolve.
+
+### Color Finale + Resolve
+These two do not coexist. Color Finale is FCP-native — its node structure has no equivalent in Resolve. Grade in one or the other, not both.
 
 ### AI-generated clips in roundtrip
 ComfyUI default output: 8-bit PNG or JPEG. **Do not use these in a grading timeline.**
@@ -160,20 +170,42 @@ See `docs/06-av1-archiving.md` for full bit-depth and color pipeline detail.
 
 ---
 
-## Audio: FCP → Pro Tools / Logic
+## Audio: what survives in roundtrip
 
-For final sound mix.
+Audio is actually the strongest part of the FCP → Resolve roundtrip.
 
-### Via X2Pro (FCP → Pro Tools)
-- Exports audio tracks with EDL to AAF format
+### FCP audio export → Resolve or DAW
+
+FCP exports audio via **Roles** — dialogue, music, effects, etc. as separate stems. Two paths:
+
+**Path 1 — AAF via X2Pro**
+- X2Pro exports an AAF with all audio tracks
+- Resolve imports AAF: levels, panning, cuts, fades survive
 - Pro Tools imports AAF natively
-- Preserves: audio levels, cuts, fades, basic audio effects
-- Loses: FCP-native audio processing beyond the basics
+- This is the most information-preserving transfer for audio
 
-### Via Logic Pro (native Apple)
-- **DAWBridge** plugin: live sync between FCP timeline and Logic session
+**Path 2 — Stems via Roles export (FCP native)**
+- FCP: File > Share > Export Roles as separate files
+- Export each role as ProRes or WAV
+- Import stems into Resolve's Fairlight
+- No AAF needed, but you lose the mix structure (each track is flat)
+
+**Path 3 — Logic Pro via DAWBridge**
+- DAWBridge plugin: live sync between FCP timeline and Logic
 - Changes in FCP reflect in Logic in real-time
-- More integrated than Pro Tools route for Apple-native workflows
+- Best for Apple-native sound design workflow
+
+### What survives audio-wise
+
+| Element | Via AAF/X2Pro | Via Stems |
+|---------|--------------|-----------|
+| Audio cuts | ✅ | ✅ |
+| Level/pan | ✅ | ❌ (flat) |
+| Fades | ✅ | ❌ |
+| FCP audio effects | ⚠️ basic only | ❌ |
+| Role structure | ✅ | ✅ (as separate files) |
+
+**Practical recommendation**: use X2Pro for audio roundtrip if you're going to Pro Tools or Resolve Fairlight. It preserves the most information.
 
 ---
 
