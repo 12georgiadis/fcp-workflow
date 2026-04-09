@@ -131,6 +131,35 @@ Timecode alignment requires careful tracking — keep a spreadsheet or use Claud
 
 ---
 
+## Color space across the roundtrip
+
+### BRAW color science
+BRAW enters FCP via BRAW Toolbox decoded to Rec.709 by default, or in BMD Film Gen 5 log for grading. Set this per-clip in BRAW Toolbox inspector.
+
+**Rule**: if you're sending to Resolve for grading, import BRAW as BMD Film Gen 5 (log). Don't bake Rec.709 before grading — you lose latitude.
+
+### What happens to color in FCP → Resolve
+- Camera LUTs applied in FCP (via LUT Robot or manual): **survive** in Resolve as a baked conversion on the clip
+- FCP color corrections (Color Board, Color Curves): **do not survive** — Resolve ignores them
+- FCP Enhance Light and Color (ML): **does not survive**
+
+**Best practice**: apply no color correction in FCP during assembly. Leave BRAW raw. All grading happens in Resolve.
+
+### AI-generated clips in roundtrip
+ComfyUI default output: 8-bit PNG or JPEG. **Do not use these in a grading timeline.**
+
+Required pipeline:
+```
+ComfyUI → EXR 32-bit float (frame sequence)
+        → ffmpeg → ProRes 4444 10-bit
+                 → import into FCP/Resolve
+                 → right-click → Input Color Space: Rec.709 SDR
+```
+
+See `docs/06-av1-archiving.md` for full bit-depth and color pipeline detail.
+
+---
+
 ## Audio: FCP → Pro Tools / Logic
 
 For final sound mix.
