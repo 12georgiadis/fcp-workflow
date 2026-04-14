@@ -86,17 +86,20 @@ Converts FCPXML between versions (v1.8 ↔ v1.11).
 #### CommandPost — FREE (open source)
 **Download**: [commandpost.fcp.cafe](https://commandpost.fcp.cafe)
 
-The foundation of any serious FCP workflow. 258,000+ downloads. Used at Netflix, Pixar, BBC.
+258,000+ downloads. Used at Netflix, Pixar, BBC.
 
-- Hundreds of additional FCP actions
-- Hardware panel support (Stream Deck, Tangent, TourBox, Monogram)
-- Lua scripting for custom automations
-- Control surface configuration
-- Batch processing
-- FCPXML tools
+**Use CommandPost for:**
+- Hardware panel support (Stream Deck, Tangent, TourBox, Monogram) — SpliceKit has no hardware layer
+- Batch tagging: Titles to Keywords (still the fastest path for interview logging)
+- Lua scripting for FCP UI automation (external, AppleScript-based)
 - DaVinci Resolve bridge
 
-**Install first before everything else.**
+**Use SpliceKit instead for:**
+- Claude Code automation (in-process, 10ms, 200+ tools)
+- Real-time timeline editing, transcript editing, scene detection
+- Anything programmatic via MCP
+
+CommandPost and SpliceKit are complementary. CommandPost handles hardware interfaces; SpliceKit handles agent-driven editing. They don't overlap.
 
 ---
 
@@ -175,13 +178,26 @@ Useful if you work across MacBook and Mac Mini on the same project.
 
 ---
 
-## SpliceKit (developer tool)
+## SpliceKit — Primary programmatic layer
 
-Modding framework for FCP internals. Exposes FCP functions to LLM automation via API.
+**[github.com/elliotttate/SpliceKit](https://github.com/elliotttate/SpliceKit)** — dylib injected into FCP's process, exposes 78,000+ ObjC classes via JSON-RPC on `127.0.0.1:9876`. Claude Code connects as an MCP client with 200+ tools. No AppleScript, no UI simulation, no roundtrip — direct in-process control.
 
-Enables: scene detection, silence removal, AI-assisted rough cut generation, text-based editing.
+**What it replaces/complements:**
+- CommandPost for automation: SpliceKit is faster and more capable for Claude Code integration (10ms latency vs ~500ms AppleScript)
+- fcpxml-mcp-server for Claude Code + FCP workflows: SpliceKit is the primary tool; fcpxml-mcp-server complements for XML-level or multi-NLE work
+- Manual FCP ↔ ComfyUI roundtrip: `export_xml()` / `import_fcpxml()` automates the loop
 
-**Status**: Active development (April 2026). Follow fcp.cafe for release.
+**Core capabilities:**
+- `blade_at_times([...])`, `get_timeline_clips()`, `get_transcript()`, `detect_scene_changes()`
+- `apply_effect()`, `apply_transition()`, `set_inspector_property()`
+- `export_xml()`, `import_fcpxml()` — no dialog, programmatic
+- `capture_timeline()`, `capture_viewer()` — GPU screenshots for visual verification
+- `open_transcript()`, `delete_transcript_silences()` — text-based editing
+- Lua scripting VM (macOS 26.3 disabled, macOS 26.4+ fully functional)
+
+**macOS 26.3 note:** DualTimeline + Lua VM + EffectDrag crash on macOS 26.3 + FCP 12.2 build 447037. Guard patch in [PR #51](https://github.com/elliotttate/SpliceKit/pull/51). All other tools work. Fully stable on macOS 26.4+.
+
+**Status**: Production. In active daily use.
 
 ---
 

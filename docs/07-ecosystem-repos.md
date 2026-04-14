@@ -98,9 +98,15 @@ MHL is the legal-grade standard for cinema media integrity. Silverstack (commerc
 
 | Repo | Stars | What it is | Use |
 |------|-------|------------|-----|
-| [DareDev256/fcpxml-mcp-server](https://github.com/DareDev256/fcpxml-mcp-server) | — | 47 MCP tools for Claude Code → FCP via FCPXML. 348 automated tests. | Claude Code editing FCP timelines |
+| [elliotttate/SpliceKit](https://github.com/elliotttate/SpliceKit) | — | **Primary**: ObjC dylib injected into FCP process. 78K+ classes via JSON-RPC. 200+ MCP tools. In-process, no roundtrip. | Claude Code direct FCP control (blade, transcript, export, color, effects) |
+| [DareDev256/fcpxml-mcp-server](https://github.com/DareDev256/fcpxml-mcp-server) | — | **Complement**: 47 MCP tools for Claude Code → FCP via FCPXML roundtrip. 348 automated tests. | Multi-NLE workflows (FCP → DaVinci, FCP → Blender), XML-level batch ops |
 | [TheAcharya/pipeline-neo](https://github.com/TheAcharya/pipeline-neo) | — | Swift 6 FCPXML framework. Type-safe parsing, creation, manipulation. v1.5→v1.14 conversion. | Swift-native FCPXML automation |
 | [tin2tin/fcpxml_import](https://github.com/tin2tin/fcpxml_import) | — | Blender add-on to import FCPXML into Blender VSE. | FCP timeline → Blender for AI treatment |
+
+**When to use SpliceKit vs fcpxml-mcp-server:**
+- Claude Code + FCP only (blade, transcript, color, markers) → **SpliceKit**
+- Multi-NLE roundtrip (FCP → DaVinci, FCP → Blender) → **fcpxml-mcp-server + OTIO**
+- FCP → ComfyUI → FCP loop → **SpliceKit** (`export_xml` + `import_fcpxml`)
 
 ---
 
