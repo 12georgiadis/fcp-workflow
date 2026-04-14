@@ -12,11 +12,12 @@ Not a tutorial. Not a getting-started guide. A working reference documenting eve
 
 | Tool | Role | Status |
 |------|------|--------|
-| **Final Cut Pro 12** | Primary NLE (offline edit, rough cut, narrative assembly) | Production |
+| **Final Cut Pro 12.2** | Primary NLE (offline edit, rough cut, narrative assembly) | Production |
+| **[SpliceKit](https://github.com/elliotttate/SpliceKit)** | Direct in-process FCP control via injected dylib — 78K ObjC classes, 200+ MCP tools | Production — primary programmatic layer |
 | **DaVinci Resolve 20** | Color grading, online conform, sound prep | Production |
-| **CommandPost v2.0.5** | FCP automation, hardware panels, Lua scripting | Production |
+| **CommandPost v2.0.5** | Hardware panels, Lua scripting, batch tagging | Production |
 | **Blender VSE + Pallaidium** | AI generation zones, generative sequences | Windows (primary) |
-| **fcpxml-mcp-server** | Claude Code → FCP via FCPXML (QC, markers, rough cuts) | Active dev |
+| **fcpxml-mcp-server** | Claude Code → FCP via FCPXML roundtrip (batch ops, XML-level work) | Active dev |
 | **MLV App** | Magic Lantern RAW processing | Production |
 
 ---
@@ -25,9 +26,10 @@ Not a tutorial. Not a getting-started guide. A working reference documenting eve
 
 | Document | What it covers |
 |----------|---------------|
-| [CommandPost](docs/01-commandpost.md) | Automation, hardware panels, Lua scripting, Claude bridge |
+| [SpliceKit MCP](docs/00-splicekit-mcp.md) | Direct in-process FCP control — setup, MCP tools, macOS 26 compat |
+| [CommandPost](docs/01-commandpost.md) | Automation, hardware panels, Lua scripting |
 | [FCP 12 Features](docs/02-fcp12-features.md) | Semantic search, transcript search, FCPXML v1.14 |
-| [FCPXML MCP Server](docs/03-fcpxml-mcp.md) | AI-driven timeline editing via Claude Code |
+| [FCPXML MCP Server](docs/03-fcpxml-mcp.md) | XML-level timeline editing via Claude Code |
 | [Roundtrip Workflows](docs/04-roundtrip.md) | FCP ↔ DaVinci ↔ Blender VSE — pain points and workarounds |
 | [Plugins & Tools](docs/05-plugins.md) | Full plugin stack, FCP Cafe recommendations |
 | [AV1 & Archiving](docs/06-av1-archiving.md) | AV1/FFV1 archiving, SVT-AV1, hardware encoders, IMF |
@@ -37,22 +39,25 @@ Not a tutorial. Not a getting-started guide. A working reference documenting eve
 ## Key Findings (Feb 2026)
 
 ### What works well
-- FCP 12 semantic + transcript search saves hours on interview-heavy docs
-- CommandPost: hardware panel control, batch keyword tagging, Lua automation
-- `fcpxml-mcp-server`: Claude Code can QC timelines, generate markers, auto rough cuts
+- **SpliceKit MCP**: Claude Code controls FCP directly in-process — blade, transcript, scene detection, markers, color, effects, FCPXML export, captions, audio. No roundtrip. Real-time.
+- FCP 12.2 semantic + transcript search saves hours on interview-heavy docs
+- CommandPost: hardware panel control, batch keyword tagging
+- `fcpxml-mcp-server`: XML-level QC, markers, batch operations (complementary to SpliceKit)
 - FCP → DaVinci via FCPXML (old format): functional for grading passes
 - FCP → Blender VSE via `fcpxml_import` (tin2tin): stable
 
 ### What's fragile
-- FCP 12.0 has known bugs (adjustment clips, export stalls, render completion UI freeze) → wait for 12.1
+- SpliceKit on macOS 26.3 + FCP 12.2: DualTimeline, Lua VM, and EffectDrag crash — guard patch in [PR #51](https://github.com/elliotttate/SpliceKit/pull/51), works on macOS 26.4+
 - FCPXML roundtrip FCP ↔ DaVinci: audio desync, compound clip issues, resolution corruption
 - FCP ↔ Blender VSE return trip: unreliable via OTIO → use DaVinci as intermediary
-- FCP → ComfyUI direct: does not exist (Apple walled garden)
 
-### What's missing (roadmap)
-- [ ] CommandPost + Claude Code direct integration (no bridge yet)
-- [ ] FCP 12 semantic search API (currently UI-only, no programmatic access)
-- [ ] Real-time FCP ↔ ComfyUI pipeline (FxPlug Metal path being explored)
+### What's solved (was on roadmap)
+- ~~CommandPost + Claude Code direct integration~~ → SpliceKit MCP (in-process, no AppleScript)
+- ~~FCP semantic search API (UI-only)~~ → SpliceKit `get_transcript()` + `detect_scene_changes()` fill the gap programmatically
+- ~~FCP → ComfyUI direct~~ → SpliceKit `export_xml()` → ComfyUI node → `import_fcpxml()` closes the loop
+
+### Still missing
+- [ ] Real SpliceKit fix for macOS 26.3 DualTimeline + Lua VM (waiting upstream)
 - [ ] IMF creation from FCP workflow (requires separate tooling)
 
 ---
